@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <msclr/marshal_cppstd.h>
+#include "Register.h";
 
 namespace AirBrowser {
 
@@ -44,7 +45,9 @@ namespace AirBrowser {
 	private: System::Windows::Forms::Label^ login_login_label;
 	private: System::Windows::Forms::Label^ login_password_label;
 	private: System::Windows::Forms::Button^ login_button;
-	private: System::Windows::Forms::Button^ button1;
+	private: System::Windows::Forms::Button^ login_register_button;
+	private: System::Windows::Forms::CheckBox^ login_adminCheckbox;
+
 
 	protected:
 
@@ -70,7 +73,8 @@ namespace AirBrowser {
 			this->login_login_label = (gcnew System::Windows::Forms::Label());
 			this->login_password_label = (gcnew System::Windows::Forms::Label());
 			this->login_button = (gcnew System::Windows::Forms::Button());
-			this->button1 = (gcnew System::Windows::Forms::Button());
+			this->login_register_button = (gcnew System::Windows::Forms::Button());
+			this->login_adminCheckbox = (gcnew System::Windows::Forms::CheckBox());
 			this->SuspendLayout();
 			// 
 			// login_label
@@ -87,14 +91,14 @@ namespace AirBrowser {
 			// 
 			// login_login_input
 			// 
-			this->login_login_input->Location = System::Drawing::Point(63, 111);
+			this->login_login_input->Location = System::Drawing::Point(63, 97);
 			this->login_login_input->Name = L"login_login_input";
 			this->login_login_input->Size = System::Drawing::Size(154, 20);
 			this->login_login_input->TabIndex = 1;
 			// 
 			// login_password_input
 			// 
-			this->login_password_input->Location = System::Drawing::Point(63, 162);
+			this->login_password_input->Location = System::Drawing::Point(63, 148);
 			this->login_password_input->Name = L"login_password_input";
 			this->login_password_input->ShortcutsEnabled = false;
 			this->login_password_input->Size = System::Drawing::Size(154, 20);
@@ -104,7 +108,7 @@ namespace AirBrowser {
 			// login_login_label
 			// 
 			this->login_login_label->AutoSize = true;
-			this->login_login_label->Location = System::Drawing::Point(60, 95);
+			this->login_login_label->Location = System::Drawing::Point(60, 81);
 			this->login_login_label->Name = L"login_login_label";
 			this->login_login_label->Size = System::Drawing::Size(33, 13);
 			this->login_login_label->TabIndex = 3;
@@ -113,7 +117,7 @@ namespace AirBrowser {
 			// login_password_label
 			// 
 			this->login_password_label->AutoSize = true;
-			this->login_password_label->Location = System::Drawing::Point(60, 146);
+			this->login_password_label->Location = System::Drawing::Point(60, 132);
 			this->login_password_label->Name = L"login_password_label";
 			this->login_password_label->Size = System::Drawing::Size(53, 13);
 			this->login_password_label->TabIndex = 4;
@@ -129,22 +133,33 @@ namespace AirBrowser {
 			this->login_button->UseVisualStyleBackColor = true;
 			this->login_button->Click += gcnew System::EventHandler(this, &Login_window::login_button_Click);
 			// 
-			// button1
+			// login_register_button
 			// 
-			this->button1->Location = System::Drawing::Point(63, 227);
-			this->button1->Name = L"button1";
-			this->button1->Size = System::Drawing::Size(154, 23);
-			this->button1->TabIndex = 6;
-			this->button1->Text = L"Register a new  account";
-			this->button1->UseVisualStyleBackColor = true;
-			this->button1->Click += gcnew System::EventHandler(this, &Login_window::button1_Click);
+			this->login_register_button->Location = System::Drawing::Point(63, 227);
+			this->login_register_button->Name = L"login_register_button";
+			this->login_register_button->Size = System::Drawing::Size(154, 23);
+			this->login_register_button->TabIndex = 6;
+			this->login_register_button->Text = L"Register a new  account";
+			this->login_register_button->UseVisualStyleBackColor = true;
+			this->login_register_button->Click += gcnew System::EventHandler(this, &Login_window::login_register_button_Click);
+			// 
+			// login_adminCheckbox
+			// 
+			this->login_adminCheckbox->AutoSize = true;
+			this->login_adminCheckbox->Location = System::Drawing::Point(63, 175);
+			this->login_adminCheckbox->Name = L"login_adminCheckbox";
+			this->login_adminCheckbox->Size = System::Drawing::Size(97, 17);
+			this->login_adminCheckbox->TabIndex = 7;
+			this->login_adminCheckbox->Text = L"Enter as Admin";
+			this->login_adminCheckbox->UseVisualStyleBackColor = true;
 			// 
 			// Login_window
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(284, 367);
-			this->Controls->Add(this->button1);
+			this->Controls->Add(this->login_adminCheckbox);
+			this->Controls->Add(this->login_register_button);
 			this->Controls->Add(this->login_button);
 			this->Controls->Add(this->login_password_label);
 			this->Controls->Add(this->login_login_label);
@@ -157,7 +172,6 @@ namespace AirBrowser {
 			this->Name = L"Login_window";
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
 			this->Text = L"Login_window";
-			this->Load += gcnew System::EventHandler(this, &Login_window::Login_window_Load);
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
@@ -169,9 +183,15 @@ namespace AirBrowser {
 		std::string inputLogin = msclr::interop::marshal_as<std::string>(login_login_input->Text);
 		std::string inputPassword = msclr::interop::marshal_as<std::string>(login_password_input->Text);
 		bool isAuthenticated = false;
-		std::ifstream file("users.csv");
+		std::ifstream file;
+		if (login_adminCheckbox->Checked) {
+			file.open("admins.csv");
+		}
+		else {
+			file.open("users.csv");
+		}
 		if (!file.is_open()) {
-			MessageBox::Show("Failed to open a file! check project's directory and file users.csv.", "error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+			MessageBox::Show("Failed to open a file! check project's directory", "error", MessageBoxButtons::OK, MessageBoxIcon::Error);
 			return;
 		}
 		std::string line;
@@ -190,13 +210,13 @@ namespace AirBrowser {
 			MessageBox::Show("Logged in succesfully!", "Succes!", MessageBoxButtons::OK);
 		}
 		else {
-			MessageBox::Show("Incorrect login or password!", "Error", MessageBoxButtons::OK);
+			MessageBox::Show("Incorrect login or password!", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
 		}
 	}
-private: System::Void Login_window_Load(System::Object^ sender, System::EventArgs^ e) {
-}
-private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
-	
+
+private: System::Void login_register_button_Click(System::Object^ sender, System::EventArgs^ e) {
+	Register^ registerr = gcnew Register();
+	registerr->Show();
 }
 };
 }

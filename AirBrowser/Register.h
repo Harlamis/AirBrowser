@@ -1,4 +1,8 @@
 #pragma once
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <msclr/marshal_cppstd.h>
 
 namespace AirBrowser {
 
@@ -106,8 +110,10 @@ namespace AirBrowser {
 			// 
 			this->register_password_input->Location = System::Drawing::Point(74, 119);
 			this->register_password_input->Name = L"register_password_input";
+			this->register_password_input->PasswordChar = '*';
 			this->register_password_input->Size = System::Drawing::Size(140, 20);
 			this->register_password_input->TabIndex = 3;
+			this->register_password_input->UseSystemPasswordChar = true;
 			// 
 			// register_button
 			// 
@@ -117,6 +123,7 @@ namespace AirBrowser {
 			this->register_button->TabIndex = 4;
 			this->register_button->Text = L"Register";
 			this->register_button->UseVisualStyleBackColor = true;
+			this->register_button->Click += gcnew System::EventHandler(this, &Register::register_button_Click);
 			// 
 			// register_password_label
 			// 
@@ -152,6 +159,7 @@ namespace AirBrowser {
 			this->ForeColor = System::Drawing::SystemColors::Highlight;
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedToolWindow;
 			this->Name = L"Register";
+			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
 			this->Text = L"Register";
 			this->ResumeLayout(false);
 			this->PerformLayout();
@@ -162,5 +170,47 @@ namespace AirBrowser {
 	}
 	private: System::Void adminCheckbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
 	}
+private: System::Void register_button_Click(System::Object^ sender, System::EventArgs^ e) {
+	std::string inputLogin = msclr::interop::marshal_as<std::string>(register_login_input->Text);
+	std::string inputPassword = msclr::interop::marshal_as<std::string>(register_password_input->Text);
+	std::ifstream file;
+	if (register_adminCheckbox->Checked) {
+		file.open("admins.csv");
+	}
+	else {
+		file.open("users.csv");
+	}
+	if (!file.is_open()) {
+		MessageBox::Show("Cannot open a file or create it for reading! check program directory for issues or reinstall the program!", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+		return;
+	}
+	std::string line;
+	while (std::getline(file, line)) {
+		std::stringstream stream(line);
+		std::string login;
+		if (std::getline(stream, login, ',')) {
+			if (login == inputLogin) {
+				file.close();
+				MessageBox::Show("An account with this login already exist. Come up with something new or remember your password", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+				return;
+			}
+		}
+	}
+	std::ofstream outFile;
+	if (register_adminCheckbox->Checked) {
+		outFile.open("admins.csv", std::ios::app);
+	}
+	else {
+		outFile.open("users.csv", std::ios::app);
+	}
+	if (!outFile.is_open()) {
+		MessageBox::Show("Cannot open the file for writing!", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+		return;
+	}
+	outFile << inputLogin << "," << inputPassword << "\n";
+	outFile.close();
+	MessageBox::Show("Account successfully registered!", "Success", MessageBoxButtons::OK);
+	this->Close();
+}
 };
 }
